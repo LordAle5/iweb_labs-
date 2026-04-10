@@ -1,0 +1,38 @@
+import com.sun.jdi.event.StepEvent;
+
+public class equipos {
+
+    private int Cant_participante;
+    private String nombre;
+    private Mascota mascota;
+    private Barra barra;
+    private String delegadoGeneral;
+    private String delegadoReclamos;
+    private String colorPolo;
+    private Especialidades especialidad;
+
+    public equipos (String nombre, String colorPolo, Mascota mascota, Barra barra, Especialidades especialidad){
+        this.nombre = nombre;
+        this.colorPolo = colorPolo;
+        this.mascota = mascota;
+        this.barra = barra;
+        this.especialidad = especialidad;
+
+    }
+
+}
+
+
+public class Barra {
+
+    private String nombreBarra;
+    private ArrayList<String> listaBarra;
+
+    public Barra(String nombreBarra){
+
+        this.nombreBarra = nombreBarra;
+        this.listaBarra = new ArrayList<>();
+    }
+
+
+}
