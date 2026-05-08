@@ -1,0 +1,144 @@
+Drop DATABASE IF EXISTS petzone;
+create database petzone;
+USE petzone;
+
+CREATE TABLE cliente (
+    id_cliente INT AUTO_INCREMENT,
+    nombres VARCHAR(100) NOT NULL,
+    apellidos VARCHAR(100) NOT NULL,
+    correo VARCHAR(100) NOT NULL,
+    telefono VARCHAR(20) NOT NULL,
+    direccion VARCHAR(150) NOT NULL,
+    PRIMARY KEY (id_cliente)
+);
+
+
+CREATE TABLE proveedor (
+    id_proveedor INT AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    telefono VARCHAR(20) NOT NULL,
+    correo VARCHAR(100) NOT NULL,
+    ciudad VARCHAR(50) NOT NULL,
+    PRIMARY KEY (id_proveedor)
+);
+
+CREATE TABLE categoria (
+    id_categoria INT AUTO_INCREMENT,
+    nombre VARCHAR(50) NOT NULL,
+    PRIMARY KEY (id_categoria)
+);
+
+CREATE TABLE producto (
+    id_producto INT AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    descripcion VARCHAR(255) NOT NULL,
+    precio_unitario DECIMAL(8,2) NOT NULL,
+    stock INT NOT NULL,
+    id_categoria INT NOT NULL,
+    PRIMARY KEY (id_producto),
+    FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
+);
+
+CREATE TABLE pedido (
+    id_pedido INT AUTO_INCREMENT,
+    fecha DATE NOT NULL,
+    monto_total DECIMAL(10,2) NOT NULL,
+    id_cliente INT NOT NULL,
+    PRIMARY KEY (id_pedido),
+    FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente)
+);
+CREATE TABLE detalle_pedido (
+    id_pedido INT NOT NULL,
+    id_producto INT NOT NULL,
+    cantidad INT NOT NULL,
+    precio_unitario DECIMAL(8,2) NOT NULL,
+    PRIMARY KEY (id_pedido, id_producto),
+    FOREIGN KEY (id_pedido) REFERENCES pedido(id_pedido),
+    FOREIGN KEY (id_producto) REFERENCES producto(id_producto)
+);
+CREATE TABLE proveedor_producto (
+    id_proveedor INT NOT NULL,
+    id_producto INT NOT NULL,
+    PRIMARY KEY (id_proveedor, id_producto),
+    FOREIGN KEY (id_proveedor) REFERENCES proveedor(id_proveedor),
+    FOREIGN KEY (id_producto) REFERENCES producto(id_producto)
+);
+
+
+-- Categorías
+INSERT INTO categoria (nombre) VALUES 
+('Alimento'), ('Juguetes'), ('Accesorios de paseo'), ('Higiene'), ('Hábitats'),
+('Ropa'), ('Salud y Vitaminas'), ('Golosinas y Snacks'), ('Entrenamiento'), ('Transportadoras');
+
+-- Proveedores
+INSERT INTO proveedor (nombre, telefono, correo, ciudad) VALUES
+('Purina Peru', '999111222', 'contacto@purina.pe', 'Lima'),
+('PetCorp S.A.', '988222333', 'ventas@petcorp.com', 'Arequipa'),
+('Huellas Distribuciones', '977333444', 'hola@huellas.pe', 'Trujillo'),
+('AcuaMundo', '966444555', 'info@acuamundo.pe', 'Piura'),
+('Aves y Mas', '955555666', 'contacto@avesymas.com', 'Chiclayo'),
+('DoggyStyle', '944666777', 'ventas@doggystyle.pe', 'Lima'),
+('CatLover Imports', '933777888', 'import@catlover.com', 'Cusco'),
+('SaludAnimal', '922888999', 'info@saludanimal.pe', 'Lima'),
+('Juguetes Peludos', '911999000', 'hola@juguetespeludos.com', 'Ica'),
+('Roedores Felices', '900000111', 'contacto@roedores.pe', 'Arequipa');
+
+-- Clientes
+INSERT INTO cliente (nombres, apellidos, correo, telefono, direccion) VALUES
+('Juan', 'Perez', 'juan.perez@email.com', '999888777', 'Av. Larco 123'),
+('Maria', 'Lopez', 'maria.l@email.com', '988777666', 'Calle Las Flores 456'),
+('Carlos', 'Garcia', 'carlos.g@email.com', '977666555', 'Av. Arequipa 789'),
+('Ana', 'Martinez', 'ana.m@email.com', '966555444', 'Jr. Puno 101'),
+('Luis', 'Rodriguez', 'luis.r@email.com', '955444333', 'Av. Brasil 202'),
+('Carmen', 'Sanchez', 'carmen.s@email.com', '944333222', 'Calle Los Pinos 303'),
+('Jorge', 'Alvarado', 'jorge.a@email.com', '933222111', 'Av. Salaverry 404'),
+('Diana', 'Romero', 'diana.r@email.com', '922111000', 'Jr. Lima 505'),
+('Pedro', 'Gomez', 'pedro.g@email.com', '911000999', 'Calle Real 606'),
+('Laura', 'Torres', 'laura.t@email.com', '900999888', 'Av. Tacna 707');
+
+-- Productos
+INSERT INTO producto (nombre, descripcion, precio_unitario, stock, id_categoria) VALUES
+('Dog Chow Adultos 15kg', 'Comida seca para perro', 120.50, 50, 1),
+('Pelota con cascabel', 'Pelota de goma para gato', 15.00, 100, 2),
+('Correa retráctil 5m', 'Correa para perros medianos', 45.00, 30, 3),
+('Shampoo Antipulgas', 'Shampoo 500ml', 25.50, 60, 4),
+('Jaula para Hamster', 'Jaula de 3 pisos con rueda', 85.00, 20, 5),
+('Chompa de lana', 'Talla M para perros', 35.00, 40, 6),
+('Vitaminas en gel', 'Suplemento para gatos', 40.00, 25, 7),
+('Hueso de carnaza', 'Snack dental', 12.00, 200, 8),
+('Clicker de adiestramiento', 'Clicker con pulsera', 18.00, 45, 9),
+('Maleta transportadora', 'Para viajes en cabina', 110.00, 15, 10);
+
+-- Proveedor - Producto (N:M)
+INSERT INTO proveedor_producto (id_proveedor, id_producto) VALUES
+(1, 1), (1, 8), 
+(2, 2), (2, 9), 
+(3, 3), (3, 6), 
+(4, 4), (4, 7), 
+(5, 5), (5, 10);
+
+-- Pedidos
+INSERT INTO pedido (fecha, monto_total, id_cliente) VALUES
+('2026-05-01', 135.50, 1),
+('2026-05-02', 45.00, 2),
+('2026-05-03', 110.50, 3),
+('2026-05-04', 35.00, 4),
+('2026-05-05', 85.00, 5),
+('2026-05-06', 155.00, 6),
+('2026-05-07', 40.00, 7),
+('2026-05-08', 24.00, 8),
+('2026-05-09', 18.00, 9),
+('2026-05-10', 110.00, 10);
+
+-- Detalle de Pedido (N:M)
+INSERT INTO detalle_pedido (id_pedido, id_producto, cantidad, precio_unitario) VALUES
+(1, 1, 1, 120.50), (1, 2, 1, 15.00), -- Pedido 1
+(2, 3, 1, 45.00),                   -- Pedido 2
+(3, 5, 1, 85.00), (3, 4, 1, 25.50), -- Pedido 3
+(4, 6, 1, 35.00),                   -- Pedido 4
+(5, 5, 1, 85.00),                   -- Pedido 5
+(6, 10, 1, 110.00), (6, 3, 1, 45.00),-- Pedido 6
+(7, 7, 1, 40.00),                   -- Pedido 7
+(8, 8, 2, 12.00),                   -- Pedido 8
+(9, 9, 1, 18.00),                   -- Pedido 9
+(10, 10, 1, 110.00);                -- Pedido 10
