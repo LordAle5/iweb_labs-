@@ -1,0 +1,45 @@
+#Mostrar el stock total de productos por categoría.}
+SELECT c.nombre AS categoria, SUM(p.stock) AS stock_total
+FROM producto p
+JOIN categoria c ON p.id_categoria = c.id_categoria
+GROUP BY c.nombre;
+
+#Mostrar todos los clientes con su nombre y correo. (1pt)
+SELECT nombres, apellidos, correo 
+FROM cliente;
+
+#3) Contar cuántos pedidos ha hecho cada cliente. (1pt)
+SELECT c.nombres, c.apellidos, COUNT(pe.id_pedido) AS total_pedidos
+FROM cliente c
+LEFT JOIN pedido pe ON c.id_cliente = pe.id_cliente
+GROUP BY c.id_cliente;
+
+#4) Listar los productos junto con todos sus proveedores. (1pt)
+SELECT p.nombre AS producto, pr.nombre AS proveedor
+FROM producto p
+JOIN proveedor_producto pp ON p.id_producto = pp.id_producto
+JOIN proveedor pr ON pp.id_proveedor = pr.id_proveedor;
+
+#5) Mostrar los 3 productos más vendidos. (1pt)
+SELECT p.nombre, SUM(dp.cantidad) AS total_vendido
+FROM producto p
+JOIN detalle_pedido dp ON p.id_producto = dp.id_producto
+GROUP BY p.id_producto
+ORDER BY total_vendido DESC
+LIMIT 3;
+
+#6) Mostrar los productos que nunca han sido pedidos. (1pt)
+SELECT p.nombre
+FROM producto p
+LEFT JOIN detalle_pedido dp ON p.id_producto = dp.id_producto
+WHERE dp.id_producto IS NULL;
+
+#7) Mostrar el nombre de los clientes que han comprado productos de la categoría "Higiene".
+
+SELECT DISTINCT c.nombres, c.apellidos
+FROM cliente c
+JOIN pedido pe ON c.id_cliente = pe.id_cliente
+JOIN detalle_pedido dp ON pe.id_pedido = dp.id_pedido
+JOIN producto pr ON dp.id_producto = pr.id_producto
+JOIN categoria cat ON pr.id_categoria = cat.id_categoria
+WHERE cat.nombre = 'Higiene';
