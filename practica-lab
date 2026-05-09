@@ -61,4 +61,143 @@ SELECT a.nombre AS nombre_alumno,
        SUM(p.monto) AS monto_total_pagado
 FROM alumnos a
 JOIN pagos p ON a.id_alumno = p.id_alumno
-GROUP BY a.id_alumno, a.nombre, a.correo;
+GROUP BY a.id_alumno, a.nombre, a.correo;import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Scanner;
+
+public class GestorGimnasio {
+
+    // Credenciales de conexión a MySQL
+    private static final String URL = "jdbc:mysql://localhost:3306/gimnasio_db";
+    private static final String USER = "root";     // Cambia por tu usuario
+    private static final String PASSWORD = "root"; // Cambia por tu contraseña
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        int opcion;
+
+        do {
+            System.out.println("\n--- SISTEMA GIMNASIO FITCONTROL ---");
+            System.out.println("1. Top 3 clases con más inscritos (Consulta 5)");
+            System.out.println("2. Ingreso total por alumno (Consulta 8)");
+            System.out.println("3. Buscar alumnos con pagos mayores a un monto (Ejemplo Parametrizado)");
+            System.out.println("0. Salir");
+            System.out.print("Elija una opción: ");
+            
+            try {
+                opcion = Integer.parseInt(scanner.nextLine());
+                
+                switch (opcion) {
+                    case 1 -> mostrarTop3Clases();
+                    case 2 -> mostrarIngresoPorAlumno();
+                    case 3 -> {
+                        System.out.print("Ingrese el monto mínimo a filtrar: ");
+                        double monto = Double.parseDouble(scanner.nextLine());
+                        buscarPagosMayoresA(monto);
+                    }
+                    case 0 -> System.out.println("Saliendo del sistema...");
+                    default -> System.out.println("Opción no válida.");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Error: ¡Debe ingresar un valor numérico válido!");
+                opcion = -1;
+            }
+        } while (opcion != 0);
+        
+        scanner.close();
+    }
+
+    // Consulta 5: Top 3 clases con mayor cantidad de inscritos
+    public static void mostrarTop3Clases() {
+        String sql = "SELECT c.nombre_clase, COUNT(i.id_inscripcion) AS cantidad_alumnos " +
+                     "FROM clases c " +
+                     "JOIN inscripciones i ON c.id_clase = i.id_clase " +
+                     "GROUP BY c.id_clase, c.nombre_clase " +
+                     "ORDER BY cantidad_alumnos DESC LIMIT 3";
+
+        // Try-with-resources: Cierra automáticamente conn, pstmt y rs
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            System.out.println("\n--- TOP 3 CLASES CON MÁS INSCRITOS ---");
+            while (rs.next()) {
+                String clase = rs.getString("nombre_clase");
+                int cantidad = rs.getInt("cantidad_alumnos");
+                System.out.println("- " + clase + " | Alumnos: " + cantidad);
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Ocurrió una excepción SQL al consultar el Top 3 de clases.");
+            e.printStackTrace();
+        }
+    }
+
+    // Consulta 8: Ingreso total generado por cada alumno
+    public static void mostrarIngresoPorAlumno() {
+        String sql = "SELECT a.nombre AS nombre_alumno, a.correo, SUM(p.monto) AS monto_total_pagado " +
+                     "FROM alumnos a " +
+                     "JOIN pagos p ON a.id_alumno = p.id_alumno " +
+                     "GROUP BY a.id_alumno, a.nombre, a.correo";
+
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            System.out.println("\n--- INGRESO TOTAL GENERADO POR ALUMNO ---");
+            while (rs.next()) {
+                String nombre = rs.getString("nombre_alumno");
+                String correo = rs.getString("correo");
+                double montoTotal = rs.getDouble("monto_total_pagado");
+                
+                System.out.printf("Alumno: %-15s | Correo: %-25s | Total: S/ %.2f\n", nombre, correo, montoTotal);
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Ocurrió una excepción SQL al calcular los ingresos.");
+            e.printStackTrace();
+        }
+    }
+
+    // Ejemplo de uso de parámetros (?) para evitar SQL Injection
+    public static void buscarPagosMayoresA(double montoMinimo) {
+        String sql = "SELECT a.nombre, p.tipo_membresia, p.monto " +
+                     "FROM alumnos a " +
+                     "JOIN pagos p ON a.id_alumno = p.id_alumno " +
+                     "WHERE p.monto > ?";
+
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             
+            // Seteamos el parámetro de forma segura
+            pstmt.setDouble(1, montoMinimo);
+            
+            // Recién después de setear los '?', ejecutamos
+            try (ResultSet rs = pstmt.executeQuery()) {
+                System.out.println("\n--- PAGOS MAYORES A S/ " + montoMinimo + " ---");
+                boolean hayDatos = false;
+                
+                while (rs.next()) {
+                    hayDatos = true;
+                    String nombre = rs.getString("nombre");
+                    String membresia = rs.getString("tipo_membresia");
+                    double monto = rs.getDouble("monto");
+                    
+                    System.out.println(nombre + " pagó S/ " + monto + " por membresía " + membresia);
+                }
+                
+                if (!hayDatos) {
+                    System.out.println("No se encontraron pagos superiores a ese monto.");
+                }
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Error al consultar pagos. Verifica la conexión.");
+            e.printStackTrace();
+        }
+    }
+}
+
