@@ -1,0 +1,64 @@
+-- Consulta 1: Ingreso total por entrenador (calculado por el precio de las clases y sus inscritos)
+SELECT e.nombre AS nombre_entrenador, 
+       e.especialidad, 
+       COALESCE(SUM(c.precio), 0) AS ingreso_total
+FROM entrenadores e
+JOIN clases c ON e.id_entrenador = c.id_entrenador
+JOIN inscripciones i ON c.id_clase = i.id_clase
+GROUP BY e.id_entrenador, e.nombre, e.especialidad;
+
+-- Consulta 2: Alumnos inscritos en más de una clase
+SELECT a.nombre AS nombre_alumno, 
+       a.dni, 
+       COUNT(i.id_clase) AS cantidad_clases_inscritas
+FROM alumnos a
+JOIN inscripciones i ON a.id_alumno = i.id_alumno
+GROUP BY a.id_alumno, a.nombre, a.dni
+HAVING COUNT(i.id_clase) > 1;
+
+-- Consulta 3: Clases con su cantidad de inscritos (incluyendo las de 0)
+SELECT c.nombre_clase, 
+       COUNT(i.id_inscripcion) AS cantidad_alumnos
+FROM clases c
+LEFT JOIN inscripciones i ON c.id_clase = i.id_clase
+GROUP BY c.id_clase, c.nombre_clase;
+
+-- Consulta 4: Ingreso total por tipo de membresía
+SELECT tipo_membresia, 
+       SUM(monto) AS ingreso_total
+FROM pagos
+GROUP BY tipo_membresia;
+
+-- Consulta 5: Top 3 clases con mayor cantidad de inscritos
+SELECT c.nombre_clase, 
+       COUNT(i.id_inscripcion) AS cantidad_alumnos
+FROM clases c
+JOIN inscripciones i ON c.id_clase = i.id_clase
+GROUP BY c.id_clase, c.nombre_clase
+ORDER BY cantidad_alumnos DESC
+LIMIT 3;
+
+-- Consulta 6: Entrenadores con más de 2 clases asignadas
+SELECT e.nombre AS nombre_entrenador, 
+       e.especialidad, 
+       COUNT(c.id_clase) AS cantidad_clases
+FROM entrenadores e
+JOIN clases c ON e.id_entrenador = c.id_entrenador
+GROUP BY e.id_entrenador, e.nombre, e.especialidad
+HAVING COUNT(c.id_clase) > 2;
+
+-- Consulta 7: Alumnos que pagaron más que el promedio general
+SELECT a.nombre AS nombre_alumno, 
+       p.tipo_membresia, 
+       p.monto AS monto_pagado
+FROM alumnos a
+JOIN pagos p ON a.id_alumno = p.id_alumno
+WHERE p.monto > (SELECT AVG(monto) FROM pagos);
+
+-- Consulta 8: Ingreso total generado por cada alumno
+SELECT a.nombre AS nombre_alumno, 
+       a.correo, 
+       SUM(p.monto) AS monto_total_pagado
+FROM alumnos a
+JOIN pagos p ON a.id_alumno = p.id_alumno
+GROUP BY a.id_alumno, a.nombre, a.correo;
