@@ -1,0 +1,13 @@
+git init
+nano gitignore
+  .idea/
+  target/
+  *.iml
+  out/
+
+git add
+
+git commit -m "comentario"
+git branch -M main
+git remote add origin link
+git push -u origin main
