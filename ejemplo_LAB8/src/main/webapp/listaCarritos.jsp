@@ -1,99 +1,68 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: ALEJANDRO
-  Date: 12/06/2026
-  Time: 16:48
-  To change this template use File | Settings | File Templates.
---%>
 <%@ page import="java.util.ArrayList" %>
-<%@ page import="com.example.ejemplo_lab8.dto.CarritoDto" %>
-<%@ page import="com.example.ejemplo_lab8.beans.Usuario" %>
+<%@ page import="com.example.dto.DocenteDTO" %>
+<%@ page import="com.example.dao.DocenteDAO" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 
 <%
-    ArrayList<CarritoDto> lista =
-            (ArrayList<CarritoDto>) request.getAttribute("listaCarrito");
-    Usuario usuario = (Usuario) session.getAttribute("usuario");
+    // Obtenemos la lista de docentes directamente aqui
+    // para llenar el menu desplegable (combobox)
+    DocenteDAO docenteDAO = new DocenteDAO();
+    ArrayList<DocenteDTO> listaDocentes = docenteDAO.listarDocentes();
 %>
 
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Mi Carrito</title>
+    <title>Registro de Curso</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
           rel="stylesheet">
 </head>
-<body>
+<body class="bg-light">
+<div class="container mt-5" style="max-width:500px">
 
-<%-- NAVBAR --%>
-<nav class="navbar navbar-dark bg-dark px-3">
-    <span class="navbar-brand">
-        Tienda – <%= usuario != null ? usuario.getNombreCompleto() : "" %>
-    </span>
-    <div>
-        <a class="btn btn-outline-light btn-sm me-2"
-           href="<%= request.getContextPath() %>/productoServlet">
-            Productos
-        </a>
-        <a class="btn btn-outline-light btn-sm me-2"
-           href="<%= request.getContextPath() %>/carritoServlet">
-            Carrito
-        </a>
-        <a class="btn btn-outline-danger btn-sm"
-           href="<%= request.getContextPath() %>/logout">
-            Cerrar sesión
-        </a>
+    <div class="card p-4 shadow">
+        <h2 class="text-center mb-4">Registro de Curso Nuevo</h2>
+
+        <!-- El formulario envia los datos al CursoServlet mediante POST -->
+        <form action="<%= request.getContextPath() %>/registrarCurso" method="POST">
+
+            <div class="mb-3">
+                <label class="form-label">Código:</label>
+                <input type="text" class="form-control" name="codigo"
+                       placeholder="Ej: TEL131" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Nombre:</label>
+                <input type="text" class="form-control" name="nombre"
+                       placeholder="Ej: Ingeniería Web" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Créditos:</label>
+                <input type="number" class="form-control" name="creditos"
+                       placeholder="Ej: 4" required>
+            </div>
+
+            <!-- Menu desplegable (combobox) con los docentes obtenidos de la BD -->
+            <div class="mb-3">
+                <label class="form-label">Docente:</label>
+                <select class="form-select" name="idDocente" required>
+                    <option value="">Seleccione un docente</option>
+                    <% for (DocenteDTO d : listaDocentes) { %>
+                        <option value="<%= d.getIdDocente() %>">
+                            <%= d.getIdDocente() %> - <%= d.getNombre() %>
+                        </option>
+                    <% } %>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-dark w-100">Registrar Curso</button>
+
+        </form>
     </div>
-</nav>
 
-<div class="container mt-4">
-    <h2>Mi Carrito</h2>
-
-    <% if (lista.isEmpty()) { %>
-    <div class="alert alert-info">
-        Tu carrito está vacío.
-        <a href="<%= request.getContextPath() %>/productoServlet">
-            Ver productos
-        </a>
-    </div>
-    <% } else { %>
-    <table class="table table-bordered table-hover">
-        <thead class="table-dark">
-        <tr>
-            <th>ID Item</th>
-            <th>Producto</th>
-            <th>Usuario</th>
-            <th>Precio Unit.</th>
-            <th>Cantidad</th>
-            <th>Subtotal</th>
-        </tr>
-        </thead>
-        <tbody>
-        <%
-            double total = 0;
-            for (CarritoDto c : lista) {
-                total += c.getSubtotal();
-        %>
-        <tr>
-            <td><%= c.getIdItem() %></td>
-            <td><%= c.getNombreProducto() %></td>
-            <td><%= c.getNombreUsuario() %></td>
-            <td>S/. <%= String.format("%.2f",
-                    c.getPrecioUnit()) %></td>
-            <td><%= c.getCantidad() %></td>
-            <td>S/. <%= String.format("%.2f",
-                    c.getSubtotal()) %></td>
-        </tr>
-        <% } %>
-        <%-- Fila de total --%>
-        <tr class="table-success fw-bold">
-            <td colspan="5" class="text-end">TOTAL:</td>
-            <td>S/. <%= String.format("%.2f", total) %></td>
-        </tr>
-        </tbody>
-    </table>
-    <% } %>
 </div>
 </body>
 </html>
