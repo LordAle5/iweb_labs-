@@ -1,46 +1,56 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: ALEJANDRO
-  Date: 12/06/2026
-  Time: 16:47
-  To change this template use File | Settings | File Templates.
---%>
+<%@ page import="com.example.dto.CursoDTO" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+
+<%
+    // Recuperar el objeto DTO completo enviado por el Servlet
+    CursoDTO curso = (CursoDTO) request.getAttribute("curso");
+%>
+
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Login - Tienda</title>
+    <title>Curso Registrado</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
           rel="stylesheet">
 </head>
 <body class="bg-light">
-<div class="container mt-5" style="max-width:400px">
-    <h2 class="text-center mb-4">Iniciar Sesión</h2>
+<div class="container mt-5" style="max-width:500px">
 
-    <%-- Mostrar error si existe --%>
-    <% String error = (String) request.getAttribute("error");
-        if (error != null) { %>
-    <div class="alert alert-danger"><%= error %></div>
-    <% } %>
+    <div class="card p-4 shadow">
+        <h4 class="text-success mb-3">✅ CURSO REGISTRADO EXITOSAMENTE</h4>
+        <hr>
 
-    <%-- Formulario POST al LoginServlet --%>
-    <form action="<%= request.getContextPath() %>/loginServlet"
-          method="POST">
-        <div class="mb-3">
-            <label class="form-label">Correo:</label>
-            <input type="email" class="form-control"
-                   name="email" required>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Contraseña:</label>
-            <input type="password" class="form-control"
-                   name="password" required>
-        </div>
-        <button type="submit" class="btn btn-primary w-100">
-            Ingresar
-        </button>
-    </form>
+        <table class="table table-borderless mb-0">
+            <tr>
+                <td class="text-muted">Código:</td>
+                <td><b><%= curso.getCodigo() %></b></td>
+            </tr>
+            <tr>
+                <td class="text-muted">Nombre:</td>
+                <td><b><%= curso.getNombre() %></b></td>
+            </tr>
+            <tr>
+                <td class="text-muted">Créditos:</td>
+                <td><b><%= curso.getCreditos() %></b></td>
+            </tr>
+            <tr>
+                <td class="text-muted">Docente Asignado:</td>
+                <td>
+                    <b>
+                        <%= curso.getDocente().getNombre() %>
+                        (<%= curso.getDocente().getEspecialidad() %>)
+                    </b>
+                </td>
+            </tr>
+        </table>
+
+        <a href="<%= request.getContextPath() %>/index.jsp"
+           class="btn btn-dark w-100 mt-3">
+            Registrar otro curso
+        </a>
+    </div>
+
 </div>
 </body>
 </html>
