@@ -1,0 +1,128 @@
+Errores y soluciones
+Error	Solución
+Java 8 instalado, se necesitaba 17	Instalado Java 17 desde https://adoptium.net
+Maven no instalado	Descargado desde maven.apache.org, descomprimido en C:\Program Files\Maven\ y agregado al PATH en Variables de Entorno del sistema
+✅ FASE 1 — Generar el WAR
+Comandos ejecutados (en PC local)
+powershell
+
+cd "C:\PUKE\Program Web\Proyecto_QuintaOla"
+mvn clean package -DskipTests
+dir target\*.war
+Resultado
+
+BUILD SUCCESS ✅
+quinta-ola-1.0-SNAPSHOT.war generado en /target
+✅ FASE 2 — Crear Base de Datos en AWS RDS
+Configuración usada en la consola AWS
+Campo	Valor
+Motor	MySQL (no Aurora)
+Método	Configuración completa
+Plantilla	Entorno de pruebas
+Disponibilidad	1 instancia, zona única
+Versión	MySQL 8.4.8
+Identificador	quintaola-db
+Usuario	admin
+Credenciales	Autoadministrado
+Tipo de instancia	db.t4g.micro
+Almacenamiento	20 GiB, SSD gp2
+Acceso público	Sí
+Grupo de seguridad	Crear nuevo → quintaola-rds-sg
+Nombre inicial de BD	quintaola_inventario
+Errores y soluciones
+Error	Solución
+La consola estaba en "Creación sencilla"	Cambiar a "Configuración completa"
+Aurora seleccionada por defecto	Seleccionar MySQL manualmente
+"Administrado por Secrets Manager" seleccionado	Cambiar a "Autoadministrado" para poner contraseña propia
+Endpoint obtenido
+
+quintaola-db.czer42nkfwaf.us-east-1.rds.amazonaws.com
+Puerto: 3306
+✅ FASE 2.4 — Importar Esquema SQL al RDS
+Errores y soluciones
+Error	Causa	Solución
+'<' está reservado para uso futuro en PowerShell	PowerShell no soporta redirección <	Usar CMD en su lugar
+mysql no se reconoce en CMD	MySQL client no instalado en la PC	Instalar MySQL Workbench
+Pasos realizados con MySQL Workbench
+Instalado MySQL Workbench desde https://dev.mysql.com/downloads/workbench/
+Creada nueva conexión con datos del RDS:
+Host: quintaola-db.czer42nkfwaf.us-east-1.rds.amazonaws.com
+Puerto: 3306 | Usuario: admin
+Test Connection → ✅ exitoso
+Menú Server → Data Import
+Seleccionado: Import from Self-Contained File
+Archivo: quintaola_inventario_schema.sql
+Schema destino: quintaola_inventario
+Resultado: ✅ Import completed successfully
+✅ FASE 3 — Crear Servidor EC2
+Configuración usada
+Campo	Valor
+Nombre	quintaola-server
+AMI	Amazon Linux 2023
+Tipo de instancia	t2.micro / t3.micro
+Par de claves	Creado nuevo: quintaola-key.pem (RSA, descargado)
+Grupo de seguridad	Crear nuevo: quintaola-ec2-sg
+Reglas de seguridad EC2
+Regla	Tipo	Puerto	Origen
+1	SSH	22	Mi IP
+2	TCP personalizado	8080	Cualquier lugar (0.0.0.0/0)
+Errores y soluciones
+Error	Solución
+Regla 2 tenía puerto 0	Cambiado manualmente a 8080
+✅ FASE 3.4 — Conectarse al servidor por SSH
+Comando ejecutado
+powershell
+
+cd C:\Users\ALEJANDRO\Downloads
+ssh -i "quintaola-key.pem" ec2-user@TU_IP_PUBLICA
+Resultado: ✅ Prompt [ec2-user@ip-xxx ~]$ visible
+
+✅ FASE 4 — Instalar Java 17 en el Servidor
+Comandos ejecutados (dentro del servidor SSH)
+bash
+
+sudo dnf update -y
+sudo dnf install java-17-amazon-corretto -y
+java -version   # ✅ openjdk 17
+⏳ FASE 4 — Instalar Tomcat (EN PROGRESO)
+Errores y soluciones
+Error	Causa	Solución
+404 Not Found al descargar v10.1.40	Versión ya no existe	Usar versión actual 10.1.56
+chmod: No such file or directory	El mv no funcionó correctamente	Verificar con ls /opt y rehacer el proceso
+Comandos correctos a ejecutar
+bash
+
+sudo rm -rf /opt/tomcat
+sudo tar -xzf /opt/apache-tomcat-10.1.56.tar.gz -C /opt
+sudo mv /opt/apache-tomcat-10.1.56 /opt/tomcat
+sudo chmod +x /opt/tomcat/bin/*.sh
+sudo /opt/tomcat/bin/startup.sh
+Verificar en navegador: http://TU_IP_PUBLICA:8080
+
+⏳ FASE 5 — Actualizar Conexión JDBC (PENDIENTE)
+Buscar el archivo de conexión en el proyecto (ej: DBConnection.java) y cambiar:
+
+java
+
+// ANTES:
+String url = "jdbc:mysql://localhost:3306/quintaola_inventario";
+// DESPUÉS:
+String url = "jdbc:mysql://quintaola-db.czer42nkfwaf.us-east-1.rds.amazonaws.com:3306/quintaola_inventario";
+String user = "admin";
+String password = "TU_CONTRASEÑA_RDS";
+Luego regenerar el WAR:
+
+powershell
+
+mvn clean package -DskipTests
+⏳ FASE 6 — Subir el WAR al Servidor (PENDIENTE)
+powershell
+
+scp -i "C:\Users\ALEJANDRO\Downloads\quintaola-key.pem" "C:\PUKE\Program Web\Proyecto_QuintaOla\target\quinta-ola-1.0-SNAPSHOT.war" ec2-user@TU_IP_PUBLICA:/opt/tomcat/webapps/
+Acceder en: http://TU_IP_PUBLICA:8080/quinta-ola-1.0-SNAPSHOT/
+
+⏳ FASE 7 — Conectar EC2 con RDS (PENDIENTE)
+En consola AWS → EC2 → Grupos de seguridad → quintaola-rds-sg → Editar reglas de entrada:
+
+Tipo	Puerto	Origen
+MySQL/Aurora	3306	quintaola-ec2-sg
